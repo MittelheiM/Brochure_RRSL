@@ -199,10 +199,15 @@
         },
         {
           type: 'multipleChoice',
-          question: "Choisissez la bonne plage horaire pour arriver au travail :",
-          options: ["a) Entre 7h et 8h", "b) Entre 7h30 et 9h", "c) Entre 8h et 9h", "d) Entre 8h30 et 10h"],
-          answer: 1,
-          feedback: "Bien joué ! Cela te permet une certaine flexibilité pour commencer ta journée."
+          question: "Quelles sont les quatre valeurs fondamentales de Rolls-Royce ?",
+          options: [
+            "a) Excellence, Integrity, Innovation, Sustainability",
+            "b) Safety, Responsibility, Simplicity, Performance",
+            "c) Put Safety First, Do the Right Thing, Keep It Simple, Make a Difference",
+            "d) Prestige, Power, Tradition, Growth"
+          ],
+          answer: 2,
+          feedback: "Bonne réponse ! Ce sont bien les quatre valeurs fondamentales de Rolls-Royce : Put Safety First, Do the Right Thing, Keep It Simple et Make a Difference."
         },
         {
           type: 'multipleChoice',
@@ -254,12 +259,11 @@
         },
         {
           type: 'multipleChoice',
-          question: "Après un accident, il est important de :",
+          question: "Que devez-vous faire en cas d'accident sur le lieu de travail pour assurer le respect des procédures administratives et légales ?",
           options: [
-            "a) Ignorer l’incident et laisser la victime se soigner seule",
-            "b) Prévenir le département RH pour le remboursement des soins médicaux",
-            "c) Signaler l’accident seulement à un collègue",
-            "d) Ne rien faire et attendre que les choses se calment"
+            "a) Ignorer l'incident et ne pas informer les autorités compétentes",
+            "b) Informer immédiatement les ressources humaines pour le signalement et le suivi de l'accident",
+            "c) Signaler l'incident uniquement à un collègue sans formaliser le rapport",
           ],
           answer: 1,
           feedback: "Bonne réponse ! Suivre la procédure après un accident est important pour le bon suivi de l'incident."
@@ -374,7 +378,7 @@
             }, 3000);  // délai de 3 secondes avant de passer à la question suivante ou à la fin du quiz
           } else {
             // Nouveau feedback négatif
-            feedbackDiv.textContent = '❌ Ce n\'est pas encore ça, mais tu progresses ! Essaie encore !';
+            feedbackDiv.textContent = '❌ Ce n\'est pas la bonne réponse.';
             feedbackDiv.style.color = 'red';
           }
         });
@@ -384,9 +388,12 @@
 
     document.getElementById('prevBtn').addEventListener('click', () => turnPage('prev'));
     document.getElementById('nextBtn').addEventListener('click', () => turnPage('next'));
-    document.getElementById('downloadBtn').addEventListener('click', () => window.open('brochure.pdf'));
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      // Fonction de téléchargement PDF
+    });
 
-    showPages();  // Initial display
+    showPages();  // Affiche la première paire de pages
   </script>
+
 </body>
 </html>
