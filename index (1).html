@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Brochure_RRSL</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #e9ecef, #f8f9fa);
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      flex-direction: column;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 1300px;
+      width: 100%;
+      padding: 20px;
+      position: relative;
+    }
+
+    #logo {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 80px;
+      transition: all 0.5s ease;
+    }
+
+    /* Logo en haut à droite pendant le quiz */
+    #logo.show-quiz {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      width: 60px;
+      z-index: 1000;
+    }
+
+    #flipbook {
+      width: 1200px;
+      height: 800px;
+      perspective: 2000px;
+      position: relative;
+      background: transparent;
+      overflow: hidden;
+      margin-bottom: 20px;
+      touch-action: pan-y;
+    }
+
+    .page {
+      width: 500px;
+      height: 91%;
+      position: absolute;
+      top: 0;
+      background: white;
+      overflow: hidden;
+      backface-visibility: hidden;
+      transform-style: preserve-3d;
+      transform: rotateY(0deg);
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+      border-radius: 6px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .page img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      border-radius: 6px;
+    }
+
+    .left-page { left: 0; transform-origin: bottom right; }
+    .right-page { left: 520px; transform-origin: bottom left; }
+
+    .controls {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+
+    button {
+      background: #10069F;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #0b057c;
+    }
+
+    .page-number {
+      font-size: 16px;
+      color: #444;
+      margin-top: 5px;
+    }
+
+    #quiz-container {
+      display: none;
+      max-width: 1200px;
+      width: 100%;
+      padding: 50px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      text-align: center;
+    }
+
+    .quiz-question {
+      margin-bottom: 30px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .quiz-options button {
+      display: block;
+      margin: 15px 0;
+      width: 100%;
+      padding: 15px;
+      text-align: left;
+      font-size: 18px;
+      border-radius: 6px;
+      background-color: #10069F;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .quiz-options button:hover {
+      background-color: #0b057c;
+    }
+
+    .feedback {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 1300px) {
+      #flipbook { transform: scale(0.8); transform-origin: top center; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <img id="logo" src="Picture1.png" alt="Logo" />
+    <div id="flipbook"></div>
+
+    <div class="controls" id="navControls">
+      <button id="prevBtn">⟵ Page précédente</button>
+      <button id="nextBtn">Page suivante ⟶</button>
+      <button id="downloadBtn">📥 Télécharger la brochure (PDF)</button>
+    </div>
+
+    <div class="page-number" id="pageCounter">Page 1 / 40</div>
+
+    <!-- Quiz -->
+    <div id="quiz-container">
+      <div id="quiz-question" class="quiz-question"></div>
+      <div id="quiz-options" class="quiz-options"></div>
+      <div id="quiz-feedback" class="feedback"></div>
+    </div>
+  </div>
+
+  <audio id="flipSound" src="flip.mp3" preload="auto"></audio>
+
+  <script>
+    const totalPages = 40;
+    let currentIndex = 0;
+    const flipbook = document.getElementById('flipbook');
+    const pageCounter = document.getElementById('pageCounter');
+    const flipSound = document.getElementById('flipSound');
+
+    const quiz = {
+      current: 0,
+      questions: [
+        {
+          type: 'trueFalse',
+          question: "Vrai ou Faux : La présence des employés est obligatoire de 9h à 12h et de 13h30 à 16h.",
+          options: ["a) Vrai", "b) Faux"],
+          answer: 0,
+          feedback: "Exact ! Ces horaires fixes sont essentiels pour assurer une bonne organisation du travail."
+        },
+        {
+          type: 'multipleChoice',
+          question: "Quelles sont les quatre valeurs fondamentales de Rolls-Royce ?",
+          options: [
+            "a) Excellence, Integrity, Innovation, Sustainability",
+            "b) Safety, Responsibility, Simplicity, Performance",
+            "c) Put Safety First, Do the Right Thing, Keep It Simple, Make a Difference",
+            "d) Prestige, Power, Tradition, Growth"
+          ],
+          answer: 2,
+          feedback: "Bonne réponse ! Ce sont bien les quatre valeurs fondamentales de Rolls-Royce : Put Safety First, Do the Right Thing, Keep It Simple et Make a Difference."
+        },
+        {
+          type: 'multipleChoice',
+          question: "Complétez la phrase suivante : En cas de blessure sur le lieu de travail, il est impératif de :",
+          options: [
+            "a) Appeler un secouriste ou le 100 et ne jamais laisser la victime seule",
+            "b) Déplacer la victime immédiatement à l’hôpital",
+            "c) Attendre que la victime se remette sur pied avant de signaler l’accident",
+            "d) Ignorer l’accident si la victime semble en état de reprendre son travail"
+          ],
+          answer: 0,
+          feedback: "Parfait ! La sécurité des collaborateurs est une priorité, et chaque situation doit être gérée avec soin."
+        },
+        {
+          type: 'multipleChoice',
+          question: "Quelle est la bonne action à entreprendre en cas de sirène (signal continu) dans l’entreprise ?",
+          options: [
+            "a) Continuer à travailler comme si de rien n’était",
+            "b) Se charger des visiteurs, évacuer les blessés et rejoindre un point de rassemblement",
+            "c) Quitter l'entreprise discrètement",
+            "d) Prendre son sac et attendre la fin du signal"
+          ],
+          answer: 1,
+          feedback: "Bonne réponse ! Suivre les consignes d'évacuation est crucial pour la sécurité de tous."
+        },
+        {
+          type: 'multipleChoice',
+          question: "À quel moment devez-vous absolument prévenir un membre du service de lutte contre l’incendie (SLCI) ?",
+          options: [
+            "a) Si vous remarquez de la fumée dans l'entreprise",
+            "b) Lors de chaque pause café",
+            "c) Lorsque vous devez utiliser un extincteur",
+            "d) Quand vous partez en pause déjeuner"
+          ],
+          answer: 0,
+          feedback: "Exact ! La sécurité incendie est un sujet très important, et la vigilance de chacun est essentielle."
+        },
+        {
+          type: 'multipleChoice',
+          question: "Parmi les actions suivantes, lesquelles sont interdites dans le cadre des règles de sécurité de l’entreprise ?",
+          options: [
+            "a) Travailler avec un équipement électrique chauffant sans prévenir le Conseiller en Prévention",
+            "b) Utiliser un extincteur en cas de besoin",
+            "c) Ouvrir une porte coupe-feu pour aérer les locaux",
+            "d) a et c"
+          ],
+          answer: 3,
+          feedback: "Bien vu ! Ne pas prévenir le Conseiller en Prévention avant d'utiliser un équipement chauffant peut causer des risques. Rester conforme aux règles assure la sécurité de tous."
+        },
+        {
+          type: 'multipleChoice',
+          question: "Que devez-vous faire en cas d'accident sur le lieu de travail pour assurer le respect des procédures administratives et légales ?",
+          options: [
+            "a) Ignorer l'incident et ne pas informer les autorités compétentes",
+            "b) Informer immédiatement les ressources humaines pour le signalement et le suivi de l'accident",
+            "c) Signaler l'incident uniquement à un collègue sans formaliser le rapport",
+          ],
+          answer: 1,
+          feedback: "Bonne réponse ! Suivre la procédure après un accident est important pour le bon suivi de l'incident."
+        },
+        {
+          type: 'trueFalse',
+          question: "Vrai ou Faux : Le stationnement sur les places de parking doit se faire en marche avant.",
+          options: ["a) Vrai", "b) Faux"],
+          answer: 1,
+          feedback: "Exact ! Le stationnement en marche arrière est une mesure de sécurité pour faciliter une évacuation rapide."
+        }
+      ]
+    };
+
+    const createPage = (pageNumber, side) => {
+      const page = document.createElement('div');
+      page.className = `page ${side}-page`;
+
+      const img = document.createElement('img');
+      img.src = `Brochure d'accueil-${pageNumber}-1.png`; // Assure-toi que les images sont dans le bon répertoire
+      img.alt = `Page ${pageNumber}`;
+      page.appendChild(img);
+
+      requestAnimationFrame(() => {
+        page.style.opacity = '1';
+      });
+
+      return page;
+    };
+
+    const showPages = () => {
+      flipbook.innerHTML = '';
+
+      if (currentIndex === 0) {
+        const firstPage = createPage(1, 'right');
+        flipbook.appendChild(firstPage);
+        pageCounter.textContent = `Page 1 / ${totalPages}`;
+      } else {
+        const leftPageNum = currentIndex * 2 + 1;
+        const rightPageNum = currentIndex * 2 + 2;
+
+        if (leftPageNum <= totalPages) flipbook.appendChild(createPage(leftPageNum, 'left'));
+        if (rightPageNum <= totalPages) flipbook.appendChild(createPage(rightPageNum, 'right'));
+
+        const displayLeft = leftPageNum <= totalPages ? leftPageNum : '';
+        const displayRight = rightPageNum <= totalPages ? rightPageNum : '';
+        pageCounter.textContent = `Page ${displayLeft}${displayRight ? ' - ' + displayRight : ''} / ${totalPages}`;
+      }
+
+      if (currentIndex === totalPages / 2 - 1) {
+        flipbook.style.display = 'none';
+        pageCounter.style.display = 'none';
+        showQuiz();
+      }
+    };
+
+    const turnPage = (direction) => {
+      if (direction === 'next' && currentIndex + 1 < totalPages / 2) {
+        currentIndex++;
+        flipSound.play();
+        showPages();
+      } else if (direction === 'prev' && currentIndex > 0) {
+        currentIndex--;
+        flipSound.play();
+        showPages();
+      }
+    };
+
+    const showQuiz = () => {
+      document.getElementById('navControls').style.display = 'none';
+      document.getElementById('quiz-container').style.display = 'block';
+      document.getElementById('logo').classList.add('show-quiz');
+      showQuestion();
+    };
+
+    const showQuestion = () => {
+      const q = quiz.questions[quiz.current];
+      document.getElementById('quiz-question').textContent = q.question;
+      const optionsDiv = document.getElementById('quiz-options');
+      const feedbackDiv = document.getElementById('quiz-feedback');
+      optionsDiv.innerHTML = '';
+      feedbackDiv.textContent = '';
+
+      q.options.forEach((option, i) => {
+        const btn = document.createElement('button');
+        btn.textContent = option;
+        btn.addEventListener('click', () => {
+          if (i === q.answer) {
+            feedbackDiv.textContent = '✅ ' + q.feedback;
+            feedbackDiv.style.color = 'green';
+            document.querySelectorAll('#quiz-options button').forEach(b => b.disabled = true);
+            setTimeout(() => {
+              quiz.current++;
+              if (quiz.current < quiz.questions.length) {
+                showQuestion();
+              } else {
+                // Affichage du message de fin du quiz
+                document.getElementById('quiz-container').innerHTML =
+                "<h2>🎉 Merci d'avoir complété ce quizz !</h2>" +
+                "<p style='font-size: 20px;'>Tu as maintenant une meilleure compréhension des règles, des valeurs et des bonnes pratiques de notre entreprise.</p>" +
+                "<p style='font-size: 20px;'>Nous te souhaitons une excellente intégration et sommes impatients de travailler avec toi !</p>";
+
+                // Création de l'élément <img> pour afficher Photo_RRSL.jpg
+                const image = document.createElement('img');
+                image.src = 'Photo_RRSL.jpg';  // Spécifie le chemin de l'image
+                image.alt = 'Image de fin de quiz'; // Texte alternatif
+                image.style.width = '800px'; // Ajuste la taille de l'image si nécessaire
+                image.style.marginTop = '20px'; // Marge pour espacer l'image du texte
+
+                document.getElementById('quiz-container').appendChild(image);
+              }
+            }, 3000);  // délai de 3 secondes avant de passer à la question suivante ou à la fin du quiz
+          } else {
+            // Nouveau feedback négatif
+            feedbackDiv.textContent = '❌ Ce n\'est pas la bonne réponse.';
+            feedbackDiv.style.color = 'red';
+          }
+        });
+        optionsDiv.appendChild(btn);
+      });
+    };
+
+    document.getElementById('prevBtn').addEventListener('click', () => turnPage('prev'));
+    document.getElementById('nextBtn').addEventListener('click', () => turnPage('next'));
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      // Fonction de téléchargement PDF
+    });
+
+    showPages();  // Affiche la première paire de pages
+  </script>
+
+</body>
+</html>
